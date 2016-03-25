@@ -19,13 +19,14 @@ import org.apache.spark.rdd._
 
 import org.apache.spark.mllib.util.MLUtils
 
+import java.lang.System
 /*
     print("Congratulations!")
   // Create an RDD of key-value pairs with Long keys.
     val rdd = sc.parallelize((1 to 1000000).map(x => (x.toLong, 0)))
     // Construct an IndexedRDD from the pairs, hash-partitioning and indexing
     // the entries.
-    val indexed = IndexedRDD(rdd).cache()
+    idval indexed = IndexedRDD(rdd).cache()
 
     // Perform a point update.
     val indexed2 = indexed.put(1234L, 10873).cache()
@@ -51,13 +52,24 @@ object SVM {
 
   def main(args: Array[String]){
   	// open file read data
-    val sc = new SparkContext(new SparkConf().setAppName("My App"))
+    val conf = new SparkConf().setAppName("SMO-SVM")  
+    conf.setMaster("local[4]")  
 
+    val sc = new SparkContext(conf)
+
+    val data =  MLUtils.loadLibSVMFile(sc, args(0))
     //val data =  MLUtils.loadLibSVMFile(sc, "./dataset/heart_scale")
-    val data =  MLUtils.loadLibSVMFile(sc, "./dataset/fjrtest.txt")
 
+    
     var svm =  new kernelSVM(data)
+
+    val t1 = System.currentTimeMillis
+    
     svm.train()
+
+    val t2 = System.currentTimeMillis
+    val runtime = (t2 - t1)/1000
+    print("time is ", runtime)
   }
 
 }

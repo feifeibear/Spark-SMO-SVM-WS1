@@ -4,7 +4,7 @@
 		module="spark-smo_2.10"
 		revision="0.1"
 		status="integration"
-		publication="20160321185936"
+		publication="20160325184517"
 	>
 		<description>
 		spark-smo
@@ -34,8 +34,8 @@
 	<dependencies>
 		<dependency org="org.scala-lang" name="scala-compiler" rev="2.10.3" conf="scala-tool->default,optional(default)"/>
 		<dependency org="org.scala-lang" name="scala-library" rev="2.10.3" conf="scala-tool->default,optional(default);compile->default(compile)"/>
-		<dependency org="org.apache.spark" name="spark-core_2.10" rev="1.6.0" conf="compile->default(compile)"/>
-		<dependency org="org.apache.spark" name="spark-mllib_2.10" rev="1.6.0" conf="compile->default(compile)"/>
+		<dependency org="org.apache.spark" name="spark-core_2.10" rev="1.5.0" conf="compile->default(compile)"/>
+		<dependency org="org.apache.spark" name="spark-mllib_2.10" rev="1.5.0" conf="compile->default(compile)"/>
 		<dependency org="amplab" name="spark-indexedrdd" rev="0.3" conf="compile->default(compile)"/>
 	</dependencies>
 </ivy-module>
