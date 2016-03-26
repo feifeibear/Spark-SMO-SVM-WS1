@@ -28,11 +28,6 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
       }
     }.map(x => (x._2, -1 * x._1.toDouble))
   //(idx, (data, devF) )
-  
-
-  val m = data.count.toInt
-
-  var alpha = new Array[Double](m)
 
   val y = training_data.map{
       case x => {
@@ -51,9 +46,13 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
   var checkpoint_dir = "checkpoint.out"
   data.sparkContext.setCheckpointDir(checkpoint_dir)
 
+  var indexedData = IndexedRDD(data.zipWithIndex.map(x => (x._2, x._1)))
+
+  val m = indexedData.count.toInt
+  var alpha = new Array[Double](m)
+  alpha = alpha.map(x => 0D)
 
  	def train(){
-    var indexedData = IndexedRDD(data.zipWithIndex.map(x => (x._2, x._1)))
     indexedData.cache 
 
     val cost = 1D
@@ -63,8 +62,6 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
     val cEpsilon = cost - epsilon
 
     var iteration = 0
-
-    alpha = alpha.map(x => 0D)
 
     var bLow = 1D;
     var bHigh = -1D;
@@ -286,7 +283,8 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
 
         
         //println("[FJR INFO] alpha(iLow), alpha(iHigh) ", alpha(iLow), alpha(iHigh))
-        println("iteration is ", iteration)
+        if(iteration % 50 == 0)
+          print(".")
         //break
         iteration = iteration + 1;
         //println("==========================================")
@@ -295,12 +293,14 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
         if(iteration == 10)
           break
 */
-        if (iteration % 50 == 0 ) {
+        if (iteration % 100 == 0 ) {
               indexedData.checkpoint()
         }
 
       }
  	  }
+
+    println("total iteration is ", iteration)
   }//train
 
 

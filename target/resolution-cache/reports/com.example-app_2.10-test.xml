@@ -7,7 +7,7 @@
 		revision="0.1-SNAPSHOT"
 		conf="test"
 		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, sources, docs, pom, scala-tool"
-		date="20160325194230"/>
+		date="20160326150925"/>
 	<dependencies>
 		<module organisation="amplab" name="spark-indexedrdd">
 			<revision name="0.3" status="release" pubdate="20150910164554" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/amplab/spark-indexedrdd" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="0">
