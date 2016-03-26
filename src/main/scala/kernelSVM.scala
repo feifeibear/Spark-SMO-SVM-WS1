@@ -149,15 +149,16 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
         
         //all reduce move devF to driver
         //(idx, devF)
-        val devF = indexedData.mapValues(x => x._2)
+        val devFMap = indexedData.mapValues(x => x._2).collectAsMap()
 
+/*
         val devFMap = devF.collect.foldLeft(new HashMap[Int, Double]()){
           (map, term) => {
             map += term._1.toInt -> term._2
             map
           }
         }
-
+*/
         //println("=================iter1 devF==============")
         //devF.foreach(println)
         //println("=================iter2 devF==============")
