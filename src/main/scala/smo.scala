@@ -58,6 +58,7 @@ object SVM {
     val sc = new SparkContext(conf)
 
     val data =  MLUtils.loadLibSVMFile(sc, args(0))
+    //data.repartition(1)
     //val data =  MLUtils.loadLibSVMFile(sc, "./dataset/heart_scale")
 
     

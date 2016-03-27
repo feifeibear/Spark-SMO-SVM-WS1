@@ -27,7 +27,6 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
         (newlabel, x.features)
       }
     }.map(x => (x._2, -1 * x._1.toDouble))
-  //(idx, (data, devF) )
 
   val y = training_data.map{
       case x => {
@@ -46,14 +45,20 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
   var checkpoint_dir = "checkpoint.out"
   data.sparkContext.setCheckpointDir(checkpoint_dir)
 
-  var indexedData = IndexedRDD(data.zipWithIndex.map(x => (x._2, x._1)))
+  //(idx, features)
+  var indexedData = IndexedRDD(data.zipWithIndex.map(x => (x._2, x._1._1)))
+  //idx, devF
+  var indexedDevF = IndexedRDD(data.zipWithIndex.map(x => (x._2, x._1._2)))
 
   val m = indexedData.count.toInt
+  val n = indexedDevF.count.toInt
+
   var alpha = new Array[Double](m)
   alpha = alpha.map(x => 0D)
 
  	def train(){
     indexedData.cache 
+    indexedDevF.cache
 
     val cost = 1D
     val gamma = 0.1D
@@ -91,9 +96,9 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
     //var dataiHigh = dataindexed.get(iHigh.toLong).get
     //var dataiLow = dataindexed.get(iLow.toLong).get
 
-    var dataiHigh = indexedData.get(iHigh.toLong).get._1 
+    var dataiHigh = indexedData.get(iHigh.toLong).get
     //data.zipWithIndex.filter(_._2 == iHigh).map(_._1._1).first
-    var dataiLow = indexedData.get(iLow.toLong).get._1  
+    var dataiLow = indexedData.get(iLow.toLong).get 
     //data.zipWithIndex.filter(_._2 == iLow).map(_._1._1).first
 
     var eta = 2 - 2*kernel( dataiHigh , dataiLow )
@@ -126,7 +131,7 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
     iteration = 1
 
     println("iLow iHigh ", iLow, iHigh)
-
+    
     breakable{
       while(bLow > bHigh + 2*tolerance){
         //devF[i] = devF[i] + alphaHighDiff * label[iHigh] * kernel(data[i], data[iHigh], n, gamma) + alphaLowDiff * label[iLow] * kernel(data[i], data[iLow], n, gamma);
@@ -136,8 +141,11 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
         //println(dataiHigh.toDense)
         //println(dataiLow.toDense)
         
-        indexedData = indexedData.mapValues( x => (x._1, x._2 + alphaHighDiff * broad_y.value(iHigh) * kernel(x._1, dataiHigh) + alphaLowDiff * broad_y.value(iLow) * kernel(x._1, dataiLow) ) ).cache()
+        indexedDevF = indexedData.innerJoin(indexedDevF){(id, a, b) => (a,b)}.mapValues( x => ( x._2 + alphaHighDiff * broad_y.value(iHigh) * kernel(x._1, dataiHigh) + alphaLowDiff * broad_y.value(iLow) * kernel(x._1, dataiLow) ) ).persist
 
+        if (iteration % 100 == 0 ) {
+              indexedDevF.checkpoint()
+        }
         /*
         data = data.map {
           case x => {
@@ -149,7 +157,8 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
         
         //all reduce move devF to driver
         //(idx, devF)
-        val devFMap = indexedData.mapValues(x => x._2).collectAsMap()
+        //indexedDevF.persist
+        val devFMap = indexedDevF.collectAsMap()
 
 /*
         val devFMap = devF.collect.foldLeft(new HashMap[Int, Double]()){
@@ -202,9 +211,9 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
           indexedData.mapValues(_._2).collect.foreach(println)
         }
 */
-        indexedData.cache //essential makesure 
-        dataiHigh = indexedData.get(iHigh.toLong).get._1 
-        dataiLow = indexedData.get(iLow.toLong).get._1  
+        //indexedData.cache //essential makesure 
+        dataiHigh = indexedData.get(iHigh.toLong).get
+        dataiLow = indexedData.get(iLow.toLong).get 
 
 /*
         println("===========new==============================")
@@ -294,9 +303,6 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
         if(iteration == 10)
           break
 */
-        if (iteration % 100 == 0 ) {
-              indexedData.checkpoint()
-        }
 
       }
  	  }
