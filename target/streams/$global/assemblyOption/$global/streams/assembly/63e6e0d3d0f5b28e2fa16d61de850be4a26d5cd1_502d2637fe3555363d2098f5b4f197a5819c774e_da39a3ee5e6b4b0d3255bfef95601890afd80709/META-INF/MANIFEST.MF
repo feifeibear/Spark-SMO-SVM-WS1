@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-Implementation-Vendor: com.ankurdave
-Implementation-Title: part
-Implementation-Version: 0.1
-Implementation-Vendor-Id: com.ankurdave
-Specification-Vendor: com.ankurdave
-Specification-Title: part
-Specification-Version: 0.1
-
