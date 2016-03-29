@@ -129,41 +129,17 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
 
     breakable{
       while(bLow > bHigh + 2*tolerance){
-        //devF[i] = devF[i] + alphaHighDiff * label[iHigh] * kernel(data[i], data[iHigh], n, gamma) + alphaLowDiff * label[iLow] * kernel(data[i], data[iLow], n, gamma);
-        //println("==========================================")
-        //println("alphaHighDiff, alphaLowDiff, iHigh, iLow ", alphaHighDiff, alphaLowDiff, iHigh, iLow)
-
-        //println(dataiHigh.toDense)
-        //println(dataiLow.toDense)
         
-        indexedData = indexedData.mapValues( x => (x._1, x._2 + alphaHighDiff * broad_y.value(iHigh) * kernel(x._1, dataiHigh) + alphaLowDiff * broad_y.value(iLow) * kernel(x._1, dataiLow) ) ).cache()
+        indexedData = indexedData.mapValues( x => (x._1, x._2 + alphaHighDiff * broad_y.value(iHigh) * kernel(x._1, dataiHigh) + alphaLowDiff * broad_y.value(iLow) * kernel(x._1, dataiLow) ) )
 
-        /*
-        data = data.map {
-          case x => {
-            var tmp = x._2 + alphaHighDiff * broad_y.value(iHigh) * kernel(x._1, dataiHigh) + alphaLowDiff * broad_y.value(iLow) * kernel(x._1, dataiLow)
-            (x._1, tmp)
-          }
+        if (iteration % 100 == 0 ) {
+              indexedData.checkpoint()
         }
-        */
-        
-        //all reduce move devF to driver
-        //(idx, devF)
+        indexedData.persist()
+
         val devFMap = indexedData.mapValues(x => x._2).collectAsMap()
 
-/*
-        val devFMap = devF.collect.foldLeft(new HashMap[Int, Double]()){
-          (map, term) => {
-            map += term._1.toInt -> term._2
-            map
-          }
-        }
-*/
-        //println("=================iter1 devF==============")
-        //devF.foreach(println)
-        //println("=================iter2 devF==============")
 
-        //break;
 
         var min_value = 655345D
         var max_value = -min_value
@@ -194,30 +170,11 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
         bHigh = devFMap(iHigh)
         bLow = devFMap(iLow) 
 
-        //println("[FJR INFO] iHigh, iLow, bHigh, bLow ", iHigh, iLow, bHigh, bLow)
 
-/*
-        println("===========old==============================")
-        if(iteration == 1){
-          indexedData.mapValues(_._2).collect.foreach(println)
-        }
-*/
         indexedData.cache //essential makesure 
         dataiHigh = indexedData.get(iHigh.toLong).get._1 
         dataiLow = indexedData.get(iLow.toLong).get._1  
 
-/*
-        println("===========new==============================")
-        if(iteration == 1){
-          indexedData.mapValues(_._2).collect.foreach(println)
-          break
-        }
-        */
-        //dataiHigh = data.zipWithIndex.filter(_._2 == iHigh).map(_._1._1).first
-        //dataiLow = data.zipWithIndex.filter(_._2 == iLow).map(_._1._1).first
-
-        //dataiHigh = dataindexed.get(iHigh.toLong).get
-        //dataiLow = dataindexed.get(iLow.toLong).get
 
         eta = 2 - 2 * kernel(dataiHigh, dataiLow)
         //println("1 eta ", eta);
@@ -288,15 +245,7 @@ class kernelSVM(training_data:RDD[LabeledPoint]) extends java.io.Serializable{
           print(".")
         //break
         iteration = iteration + 1;
-        //println("==========================================")
 
-/*
-        if(iteration == 10)
-          break
-*/
-        if (iteration % 100 == 0 ) {
-              indexedData.checkpoint()
-        }
 
       }
  	  }
